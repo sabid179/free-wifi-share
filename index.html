@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Free WiFi Share</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+        <rect width="24" height="24" rx="6" fill="#006a4e" />
+        <path d="M5.5 10.2a9.8 9.8 0 0 1 13 0M8 13a6.2 6.2 0 0 1 8 0" fill="none" stroke="#fff" stroke-width="1.8"
+          stroke-linecap="round" />
+        <circle cx="12" cy="16.4" r="1.5" fill="#f42a41" />
+      </svg>
+      <h1>Free WiFi Share</h1>
+    </div>
+    <div class="top-actions">
+      <span id="modeBadge" class="badge"></span>
+      <button id="themeBtn" class="btn ghost" type="button">Dark mode</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="side">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="get" role="tab" type="button">Get WiFi</button>
+        <button class="tab" data-tab="add" role="tab" type="button">Add WiFi</button>
+      </div>
+
+      <!-- GET WIFI -->
+      <section id="panel-get" class="panel">
+        <div class="card">
+          <p class="sub">কাছের ফ্রি ওয়াইফাই খুঁজুন, অথবা ম্যাপে যেকোনো pin-এ ক্লিক করে details দেখুন।</p>
+          <button id="locBtn" class="btn primary block" type="button">Use my current location</button>
+          <div class="searchrow">
+            <input id="areaInput" type="text" placeholder="Or search an area (e.g. Dhanmondi, Dhaka)">
+            <button id="areaBtn" class="btn" type="button">Go</button>
+          </div>
+          <ul id="areaRes" class="results"></ul>
+          <p id="locStatus" class="muted">No reference location set</p>
+        </div>
+
+        <div class="card grow">
+          <div class="row">
+            <h2>Nearby WiFi</h2>
+            <select id="radius" aria-label="Radius">
+              <option value="500">500 m</option>
+              <option value="1000">1 km</option>
+              <option value="5000">5 km</option>
+              <option value="0" selected>All</option>
+            </select>
+          </div>
+          <input id="search" type="search" placeholder="Filter by SSID or place name">
+          <ul id="list" class="list"></ul>
+        </div>
+      </section>
+
+      <!-- ADD WIFI -->
+      <section id="panel-add" class="panel hidden">
+        <div class="card">
+          <h2>1. Set location</h2>
+          <p class="sub">GPS, ম্যাপে ক্লিক, অথবা জায়গার নাম সার্চ করে লোকেশন দিন। Pin টেনে সরানোও যায়।</p>
+          <div class="btnrow">
+            <button id="addGpsBtn" class="btn primary" type="button">Use GPS</button>
+            <button id="pickBtn" class="btn" type="button">Pick on map</button>
+          </div>
+          <div class="searchrow">
+            <input id="addInput" type="text" placeholder="Search a place or address">
+            <button id="addSearchBtn" class="btn" type="button">Search</button>
+          </div>
+          <ul id="addRes" class="results"></ul>
+          <p id="addLocStatus" class="muted">Location not set</p>
+        </div>
+
+        <div class="card">
+          <h2>2. WiFi details</h2>
+          <form id="addForm" autocomplete="off">
+            <label>WiFi name (SSID)<input id="ssid" required maxlength="60"></label>
+            <label>Password<input id="pass" required maxlength="80"></label>
+            <label>Place name<input id="place" required maxlength="80"
+                placeholder="e.g. Central Library, Cafe Rio"></label>
+            <label>Details <span class="opt">(optional)</span><textarea id="addr" rows="2" maxlength="200"
+                placeholder="Floor, side of the building, opening hours…"></textarea></label>
+            <p class="hint">শুধু পাবলিক ও ফ্রি ওয়াইফাই শেয়ার করুন। ব্যক্তিগত নেটওয়ার্কের পাসওয়ার্ড দেবেন না।</p>
+            <button class="btn primary block" type="submit">Add WiFi</button>
+          </form>
+        </div>
+      </section>
+    </aside>
+
+    <section class="mapwrap">
+      <div id="map"></div>
+      <div id="pickHint" class="pickhint hidden">Click anywhere on the map to set the location</div>
+      <div id="details" class="details hidden"></div>
+    </section>
+  </main>
+
+  <footer class="credit">
+    Built by <b>Md. Rakibul Islam Sabid</b> <span class="sep">•</span> Idea by <b>Muhammad Sabbir Hossain</b>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
