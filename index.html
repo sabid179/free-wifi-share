@@ -113,12 +113,32 @@
 
   <div id="toast" class="toast"></div>
 
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+  <script>
+    fetch("/api/config")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Configuration load failed");
+        }
+        return response.json();
+      })
+      .then(config => {
+        window.APP_CONFIG = config;
+        const script = document.createElement("script");
+        script.src = "/app.js";
+        document.body.appendChild(script);
+      })
+      .catch(error => {
+        console.error("Configuration error:", error);
+        document.getElementById("modeBadge").textContent =
+          "Configuration error";
+      });
+  </script>
+
 </body>
 
 </html>
