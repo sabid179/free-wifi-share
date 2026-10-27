@@ -1,3 +1,5 @@
-config.js
+/config.js
+/api/
 node_modules/
 .DS_Store
+.dev.vars

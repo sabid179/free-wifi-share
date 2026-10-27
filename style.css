@@ -1,24 +1,50 @@
+/* ==========================================================================
+   Free WiFi Share - UI styled with the shadcn/ui design system
+   (theme tokens + Button / Card / Input / Select / Tabs / Badge / Toast).
+   Vanilla CSS port of https://ui.shadcn.com - no React/Tailwind build needed.
+   ========================================================================== */
 :root {
-  --green: #006a4e;
-  --red: #f42a41;
-  --bg: #f2f6f4;
-  --card: #ffffff;
-  --text: #13211b;
-  --muted: #5b6c64;
-  --line: #dbe5e0;
-  --accent: #006a4e;
-  --accent-text: #ffffff;
-  --soft: #e8f3ee;
+  color-scheme: light;
+  --background: 140 20% 97%;
+  --foreground: 160 30% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 160 30% 8%;
+  --primary: 164 100% 21%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 150 20% 93%;
+  --secondary-foreground: 160 30% 12%;
+  --muted: 150 15% 93%;
+  --muted-foreground: 158 8% 38%;
+  --accent: 150 28% 92%;
+  --accent-foreground: 164 100% 18%;
+  --destructive: 354 91% 56%;
+  --border: 150 15% 87%;
+  --input: 150 14% 84%;
+  --ring: 164 100% 21%;
+  --control: 0 0% 100%;
+  --tab-active: 0 0% 100%;
+  --radius: 0.5rem;
 }
 :root[data-theme="dark"] {
-  --bg: #0d1512;
-  --card: #15211c;
-  --text: #e7f0ec;
-  --muted: #93a79e;
-  --line: #263830;
-  --accent: #23b585;
-  --accent-text: #04140e;
-  --soft: #1b2b25;
+  color-scheme: dark;
+  --background: 160 25% 6%;
+  --foreground: 150 20% 94%;
+  --card: 160 22% 9%;
+  --card-foreground: 150 20% 94%;
+  --primary: 160 67% 43%;
+  --primary-foreground: 160 80% 5%;
+  --secondary: 160 18% 15%;
+  --secondary-foreground: 150 20% 94%;
+  --muted: 160 18% 14%;
+  --muted-foreground: 155 10% 62%;
+  --accent: 160 20% 17%;
+  --accent-foreground: 160 67% 62%;
+  --destructive: 354 85% 62%;
+  --border: 160 16% 18%;
+  --input: 160 16% 24%;
+  --ring: 160 67% 43%;
+  --control: 160 18% 13%;
+  --tab-active: 160 16% 21%;
 }
 * {
   box-sizing: border-box;
@@ -31,23 +57,26 @@ body {
 body {
   font-family:
     "Inter", "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   display: flex;
   flex-direction: column;
   font-size: 14px;
+  -webkit-font-smoothing: antialiased;
 }
 .hidden {
   display: none !important;
 }
 
+/* ---------- header ---------- */
 .top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 24px;
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
+  min-height: 56px;
+  padding: 8px 24px;
+  background: hsl(var(--card));
+  border-bottom: 1px solid hsl(var(--border));
 }
 .brand {
   display: flex;
@@ -55,23 +84,32 @@ body {
   gap: 10px;
 }
 .brand h1 {
-  font-size: 18px;
+  font-size: 17px;
   margin: 0;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 .top-actions {
   display: flex;
   gap: 10px;
   align-items: center;
 }
+
+/* ---------- badge ---------- */
 .badge {
+  display: inline-flex;
+  align-items: center;
   font-size: 12px;
-  padding: 3px 10px;
-  border-radius: 99px;
-  background: var(--soft);
-  color: var(--muted);
-  border: 1px solid var(--line);
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 2px 10px;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+}
+.badge:empty {
+  display: none;
 }
 .badge.live::before,
 .badge.demo::before {
@@ -81,7 +119,6 @@ body {
   height: 7px;
   border-radius: 50%;
   margin-right: 6px;
-  vertical-align: middle;
 }
 .badge.live::before {
   background: #16a34a;
@@ -90,6 +127,7 @@ body {
   background: #d97706;
 }
 
+/* ---------- layout ---------- */
 .layout {
   flex: 1;
   min-height: 0;
@@ -117,35 +155,50 @@ body {
   flex: 1;
 }
 
+/* ---------- tabs ---------- */
 .tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  gap: 0;
+  padding: 3px;
+  background: hsl(var(--muted));
+  border-radius: calc(var(--radius) + 2px);
 }
 .tab {
-  border: 0;
+  border: 1px solid transparent;
   background: transparent;
-  color: var(--muted);
-  padding: 9px;
-  border-radius: 9px;
+  color: hsl(var(--muted-foreground));
+  padding: 6px 12px;
+  border-radius: calc(var(--radius) - 2px);
   font: inherit;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
+}
+.tab:hover {
+  color: hsl(var(--foreground));
+}
+.tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
 }
 .tab.active {
-  background: var(--accent);
-  color: var(--accent-text);
+  background: hsl(var(--tab-active));
+  color: hsl(var(--foreground));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08);
 }
 
+/* ---------- card ---------- */
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 14px;
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) + 4px);
+  padding: 16px;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
 .card.grow {
   flex: 1;
@@ -157,56 +210,88 @@ body {
   font-size: 15px;
   margin: 0 0 6px;
   font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .row h2 {
   margin: 0;
 }
 .sub {
-  font-size: 12.5px;
-  color: var(--muted);
-  margin: 0 0 10px;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  margin: 0 0 12px;
   line-height: 1.5;
 }
+
+/* ---------- label / input / textarea / select ---------- */
 label {
   display: block;
-  font-size: 12.5px;
-  color: var(--muted);
-  margin-bottom: 10px;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  margin-bottom: 12px;
   font-weight: 500;
 }
 .opt {
   font-weight: 400;
-  opacity: 0.8;
+  color: hsl(var(--muted-foreground));
 }
 input,
 textarea,
 select {
   width: 100%;
-  margin-top: 4px;
-  padding: 9px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
+  margin-top: 6px;
+  height: 36px;
+  padding: 4px 12px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--control));
+  color: hsl(var(--foreground));
   font: inherit;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+textarea {
+  height: auto;
+  min-height: 60px;
+  padding: 8px 12px;
+  resize: vertical;
+  line-height: 1.5;
+}
+input::placeholder,
+textarea::placeholder {
+  color: hsl(var(--muted-foreground));
 }
 select {
   width: auto;
   margin: 0;
+  padding-right: 32px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%237a8a83' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
 }
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-  border-color: transparent;
+select option {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
 }
 #search {
   margin: 0 0 10px;
@@ -214,44 +299,78 @@ select:focus {
 .hint,
 .muted {
   font-size: 12px;
-  color: var(--muted);
+  color: hsl(var(--muted-foreground));
   margin: 8px 0 0;
   line-height: 1.5;
 }
+.hint {
+  margin: 0 0 12px;
+}
+
+/* ---------- button ---------- */
 .btn {
-  border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--text);
-  padding: 9px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 500;
-  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
+  white-space: nowrap;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--control));
+  color: hsl(var(--foreground));
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.btn:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+.btn:focus-visible {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
+}
+.btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 .btn.primary {
-  background: var(--accent);
-  color: var(--accent-text);
-  border-color: var(--accent);
-  font-weight: 600;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.12);
+}
+.btn.primary:hover {
+  background: hsl(var(--primary) / 0.9);
+  color: hsl(var(--primary-foreground));
 }
 .btn.ghost {
   background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.btn.ghost:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
 }
 .btn.active {
-  background: var(--soft);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: hsl(var(--accent));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--accent-foreground));
 }
 .btn.block {
   width: 100%;
-}
-.btn:hover {
-  filter: brightness(1.06);
 }
 .btnrow {
   display: grid;
@@ -269,6 +388,7 @@ select:focus {
   flex: 1;
 }
 
+/* ---------- search results + list ---------- */
 .results {
   list-style: none;
   margin: 6px 0 0;
@@ -276,21 +396,28 @@ select:focus {
 }
 .results li {
   padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
   margin-bottom: 6px;
   cursor: pointer;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.4;
+  transition: background-color 0.15s;
 }
 .results li:hover {
-  border-color: var(--accent);
-  background: var(--soft);
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
 }
 .results li.empty {
   cursor: default;
-  color: var(--muted);
+  color: hsl(var(--muted-foreground));
   border-style: dashed;
+  text-align: left;
+  padding: 8px 10px;
+}
+.results li.empty:hover {
+  background: transparent;
+  color: hsl(var(--muted-foreground));
 }
 
 .list {
@@ -302,24 +429,30 @@ select:focus {
 }
 .list li {
   padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
   margin-bottom: 8px;
   cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
 }
 .list li:hover {
-  border-color: var(--accent);
+  background: hsl(var(--accent));
 }
 .list li.active {
-  border-color: var(--accent);
-  background: var(--soft);
+  border-color: hsl(var(--primary));
+  background: hsl(var(--accent));
+}
+.list li.empty:hover {
+  background: transparent;
 }
 .list .name {
   font-weight: 600;
 }
 .list .meta {
   font-size: 12px;
-  color: var(--muted);
+  color: hsl(var(--muted-foreground));
   display: flex;
   gap: 10px;
   align-items: center;
@@ -327,27 +460,32 @@ select:focus {
   margin-top: 2px;
 }
 .tag {
-  background: var(--soft);
-  color: var(--accent);
-  border: 1px solid var(--line);
-  border-radius: 99px;
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
   padding: 0 8px;
   font-size: 11.5px;
   font-weight: 600;
 }
+.list li.active .tag {
+  background: hsl(var(--card));
+}
 .empty {
-  color: var(--muted);
+  color: hsl(var(--muted-foreground));
   text-align: center;
   padding: 20px 0;
   font-size: 13px;
 }
 
+/* ---------- map ---------- */
 .mapwrap {
   position: relative;
   min-height: 420px;
-  border-radius: 12px;
+  border-radius: calc(var(--radius) + 4px);
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
 #map {
   position: absolute;
@@ -356,37 +494,62 @@ select:focus {
 #map.picking {
   cursor: crosshair;
 }
+.leaflet-container {
+  font-family: inherit;
+}
+.leaflet-container .leaflet-bar {
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+  background-clip: padding-box;
+}
+.leaflet-container .leaflet-bar a {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border-bottom-color: hsl(var(--border));
+}
+.leaflet-container .leaflet-bar a:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
 .pickhint {
   position: absolute;
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 600;
-  background: var(--text);
-  color: var(--bg);
-  padding: 7px 14px;
-  border-radius: 99px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  padding: 6px 12px;
+  border-radius: calc(var(--radius) - 2px);
   font-size: 12.5px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  font-weight: 500;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
   pointer-events: none;
   white-space: nowrap;
 }
+
+/* ---------- details card ---------- */
 .details {
   position: absolute;
   left: 14px;
   bottom: 14px;
   z-index: 500;
   width: min(400px, calc(100% - 28px));
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 14px 14px 12px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) + 4px);
+  padding: 16px;
+  box-shadow:
+    0 10px 30px -8px rgb(0 0 0 / 0.3),
+    0 4px 10px -4px rgb(0 0 0 / 0.15);
 }
 .details h3 {
-  margin: 0 28px 8px 0;
+  margin: 0 32px 10px 0;
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .details .kv {
   margin: 5px 0;
@@ -394,7 +557,7 @@ select:focus {
   line-height: 1.45;
 }
 .details .kv b {
-  color: var(--muted);
+  color: hsl(var(--muted-foreground));
   font-weight: 500;
   margin-right: 4px;
 }
@@ -402,15 +565,16 @@ select:focus {
   display: flex;
   gap: 8px;
   align-items: center;
-  background: var(--soft);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 6px 6px 6px 10px;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  padding: 5px 5px 5px 10px;
   margin: 6px 0 8px;
 }
 .pw small {
-  color: var(--muted);
+  color: hsl(var(--muted-foreground));
   font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -421,30 +585,46 @@ select:focus {
   font-family: ui-monospace, Menlo, Consolas, monospace;
 }
 .pw .btn {
-  padding: 6px 12px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
 }
 .actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 .actions .btn {
-  padding: 7px 12px;
+  height: 32px;
+  padding: 0 12px;
   font-size: 13px;
 }
 .close {
   position: absolute;
-  right: 8px;
-  top: 6px;
+  right: 10px;
+  top: 10px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
   border: 0;
-  background: none;
-  color: var(--muted);
-  font-size: 22px;
-  cursor: pointer;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 20px;
   line-height: 1;
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.close:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
 }
 
+/* ---------- map markers (unchanged) ---------- */
 .pin svg {
   display: block;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
@@ -478,37 +658,40 @@ select:focus {
   }
 }
 
+/* ---------- footer + toast ---------- */
 .credit {
   text-align: center;
   font-size: 12px;
-  color: var(--muted);
+  color: hsl(var(--muted-foreground));
   padding: 8px 12px;
-  border-top: 1px solid var(--line);
-  background: var(--card);
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
 }
 .credit b {
-  color: var(--text);
+  color: hsl(var(--foreground));
   font-weight: 600;
 }
 .credit .sep {
   margin: 0 6px;
   opacity: 0.6;
 }
-
 .toast {
   position: fixed;
   left: 50%;
   bottom: 48px;
   transform: translateX(-50%) translateY(30px);
   opacity: 0;
-  background: var(--text);
-  color: var(--bg);
-  padding: 10px 18px;
-  border-radius: 99px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  padding: 12px 16px;
+  border-radius: calc(var(--radius) + 2px);
+  box-shadow: 0 10px 30px -8px rgb(0 0 0 / 0.3);
   transition: 0.25s;
   z-index: 2000;
   pointer-events: none;
   font-size: 13.5px;
+  font-weight: 500;
   max-width: 92vw;
   text-align: center;
 }
@@ -517,6 +700,7 @@ select:focus {
   transform: translateX(-50%) translateY(0);
 }
 
+/* ---------- responsive (unchanged) ---------- */
 @media (max-width: 860px) {
   body {
     height: auto;
@@ -536,7 +720,7 @@ select:focus {
     order: -1;
   }
   .top {
-    padding: 10px 14px;
+    padding: 8px 14px;
   }
 }
 @media (min-width: 1400px) {

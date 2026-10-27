@@ -271,42 +271,53 @@
       .subscribe();
   }
 
-  /* ---------- map (OpenFreeMap: free, no API key) ---------- */
+  /* ---------- map (raster tiles: labels are shaped on the server, so Bengali spelling stays correct) ---------- */
   const map = L.map("map", { zoomControl: true, maxZoom: 19 }).setView(
     [23.8103, 90.4125],
     12,
   );
-  let baseLayer = null;
-  function rasterFallback() {
-    if (baseLayer) map.removeLayer(baseLayer);
-    baseLayer = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const TILE_SOURCES = [
+    {
+      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       maxZoom: 19,
-      attribution: "© OpenStreetMap contributors",
-    }).addTo(map);
-  }
-  try {
-    if (!L.maplibreGL) throw new Error("maplibre missing");
-    baseLayer = L.maplibreGL({
-      style: "https://tiles.openfreemap.org/styles/liberty",
       attribution:
-        '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
-    }).addTo(map);
-    const gl = baseLayer.getMaplibreMap && baseLayer.getMaplibreMap();
-    if (gl)
-      gl.on("error", (e) => {
-        if (
-          e &&
-          e.error &&
-          /Failed to fetch|403|401|style/i.test(String(e.error.message))
-        ) {
-          console.warn("OpenFreeMap failed, using fallback", e.error);
-          rasterFallback();
-        }
-      });
-  } catch (err) {
-    console.warn(err);
-    rasterFallback();
+        '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+    },
+    {
+      url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+      subdomains: "abc",
+      maxZoom: 19,
+      attribution:
+        '© OpenStreetMap contributors, tiles by <a href="https://www.hotosm.org/" target="_blank" rel="noopener">HOT</a>, hosted by <a href="https://openstreetmap.fr/" target="_blank" rel="noopener">OpenStreetMap France</a>',
+    },
+    {
+      url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      subdomains: "abcd",
+      maxZoom: 19,
+      attribution:
+        '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+    },
+  ];
+  let baseLayer = null,
+    tileIdx = 0,
+    tileErrors = 0;
+  function mountBase() {
+    if (baseLayer) map.removeLayer(baseLayer);
+    const { url, ...opts } = TILE_SOURCES[tileIdx];
+    baseLayer = L.tileLayer(url, opts).addTo(map);
+    baseLayer.on("tileload", () => {
+      tileErrors = 0;
+    });
+    baseLayer.on("tileerror", () => {
+      if (++tileErrors >= 4 && tileIdx < TILE_SOURCES.length - 1) {
+        tileIdx++;
+        tileErrors = 0;
+        console.warn("Tile server failed, switching to source " + tileIdx);
+        mountBase();
+      }
+    });
   }
+  mountBase();
 
   /* ---------- marker icons ---------- */
   function pinIcon(kind) {
