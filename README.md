@@ -11,6 +11,11 @@ A lightweight web application for sharing public WiFi passwords with an interact
 ## UI
 The interface follows the [shadcn/ui](https://ui.shadcn.com) design system (theme tokens, Button, Card, Input, Select, Tabs, Badge and Toast styles), implemented as plain CSS in `style.css` so the app still needs no build step. Light and dark themes are both supported.
 
+## Wi-Fi QR codes
+- **Connect to this Wi-Fi:** the details card has a button that copies the password and opens a short guide with a Wi-Fi QR code. Browsers cannot join a Wi-Fi network by themselves, so on another phone you can scan the QR code with the camera to join directly.
+- **Scan to add:** on the *Add WiFi* tab, tap **Scan Wi-Fi QR code** to fill the name and password from a standard Wi-Fi QR code (`WIFI:T:WPA;S:name;P:password;;`). You can also upload a photo/screenshot of the QR code. The camera needs HTTPS (or `localhost`).
+- The QR libraries ([qrcode-generator](https://www.npmjs.com/package/qrcode-generator) and [jsQR](https://www.npmjs.com/package/jsqr)) are loaded from jsDelivr only when these features are used.
+
 ## Map Tiles
 The map uses raster tiles, so place labels are rendered on the server with proper text shaping and Bengali spelling (matras, conjuncts) is displayed correctly. (Vector/MapLibre labels draw Bengali letter by letter and break it.) If a tile server fails, the app automatically falls back:
 1. **OpenStreetMap** (Primary)

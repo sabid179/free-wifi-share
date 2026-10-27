@@ -654,6 +654,10 @@
     const x = items.find((i) => i.id === id);
     if (x && fly) map.flyTo([x.lat, x.lng], Math.max(map.getZoom(), 17));
     render();
+    if (x && fly && matchMedia("(max-width: 860px)").matches)
+      document
+        .querySelector(".mapwrap")
+        .scrollIntoView({ behavior: "smooth", block: "start" });
   }
   function showDetails(id) {
     const x = items.find((i) => i.id === id),
@@ -666,8 +670,13 @@
     box.classList.remove("hidden");
     box.innerHTML = `
     <button class="close" id="dClose" aria-label="Close">×</button>
-    <h3>${esc(x.ssid)}</h3>
-    <div class="pw"><small>Password</small><code>${esc(x.password)}</code><button class="btn" id="dCopy" type="button">Copy</button></div>
+    <div class="cred">
+      <div class="cred-label">Wi-Fi name</div>
+      <div class="cred-ssid">${esc(x.ssid)}</div>
+      <div class="cred-label">Password</div>
+      <div class="cred-pass"><code>${esc(x.password)}</code><button class="btn" id="dCopy" type="button">Copy</button></div>
+      <button class="btn primary block" id="dConnect" type="button">Connect to this Wi-Fi</button>
+    </div>
     <div class="kv"><b>Place</b>${esc(x.place)}</div>
     ${x.address ? `<div class="kv"><b>Details</b>${esc(x.address)}</div>` : ""}
     <div class="kv"><b>Location</b>${fmtCoord(x.lat, x.lng)}${d ? " · " + d + " away" : ""}</div>
@@ -689,6 +698,7 @@
         toast("Could not copy. Please copy manually.");
       }
     };
+    $("dConnect").onclick = () => connectWifi(x);
     const doVote = (ok) =>
       vote(x.id, ok)
         .then(() => toast("Thanks for your feedback!"))
@@ -696,6 +706,272 @@
     $("dOk").onclick = () => doVote(true);
     $("dBad").onclick = () => doVote(false);
   }
+
+  /* ---------- modal + lazy script loader ---------- */
+  const libs = {};
+  function loadScript(src) {
+    if (!libs[src])
+      libs[src] = new Promise((res, rej) => {
+        const sc = document.createElement("script");
+        sc.src = src;
+        sc.onload = res;
+        sc.onerror = () => {
+          delete libs[src];
+          rej(new Error("Could not load " + src));
+        };
+        document.head.appendChild(sc);
+      });
+    return libs[src];
+  }
+  let modalCleanup = null;
+  function openModal(html, cleanup) {
+    closeModal();
+    $("modalCard").innerHTML = html;
+    $("modal").classList.remove("hidden");
+    modalCleanup = cleanup || null;
+  }
+  function closeModal() {
+    if (modalCleanup) {
+      const fn = modalCleanup;
+      modalCleanup = null;
+      fn();
+    }
+    $("modal").classList.add("hidden");
+    $("modalCard").innerHTML = "";
+  }
+  $("modal").addEventListener("click", (e) => {
+    if (e.target === $("modal")) closeModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("modal").classList.contains("hidden"))
+      closeModal();
+  });
+
+  /* ---------- Wi-Fi QR format: WIFI:T:WPA;S:name;P:password;; ---------- */
+  const wifiEsc = (v) => String(v).replace(/([\\;,:"])/g, "\\$1");
+  const wifiPayload = (ssid, password) =>
+    "WIFI:T:WPA;S:" + wifiEsc(ssid) + ";P:" + wifiEsc(password) + ";;";
+  function parseWifiQR(raw) {
+    const t = String(raw || "").trim();
+    if (!/^WIFI:/i.test(t)) return null;
+    const f = {};
+    let k = "",
+      v = "",
+      inKey = true,
+      esc2 = false;
+    for (const c of t.slice(5)) {
+      if (esc2) {
+        if (inKey) k += c;
+        else v += c;
+        esc2 = false;
+      } else if (c === "\\") esc2 = true;
+      else if (inKey && c === ":") inKey = false;
+      else if (c === ";") {
+        if (!inKey) f[k.toUpperCase()] = v;
+        k = "";
+        v = "";
+        inKey = true;
+      } else if (inKey) k += c;
+      else v += c;
+    }
+    if (!inKey && k) f[k.toUpperCase()] = v;
+    const unquote = (z) => (/^".*"$/.test(z) ? z.slice(1, -1) : z);
+    if (!f.S) return null;
+    return { ssid: unquote(f.S), password: unquote(f.P || "") };
+  }
+
+  /* ---------- "Connect to this Wi-Fi" (copy password + QR for another phone) ---------- */
+  const QR_GEN_SRC =
+    "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js";
+  async function connectWifi(x) {
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(x.password);
+      copied = true;
+    } catch (e) {}
+    openModal(`
+      <h2>Connect to “${esc(x.ssid)}”</h2>
+      <p class="sub">${copied ? "Password copied to your clipboard." : "Tap “Copy password” below."}</p>
+      <ol class="steps">
+        <li>Open your device’s Wi-Fi settings.</li>
+        <li>Select <b>${esc(x.ssid)}</b>.</li>
+        <li>Paste the password and connect.</li>
+      </ol>
+      <div class="qr-box"><img id="qrImg" class="hidden" alt="Wi-Fi QR code"><span id="qrMsg" class="muted">Creating QR code…</span></div>
+      <p class="muted center">On another phone, scan this QR code with the camera to join directly.</p>
+      <div class="actions">
+        <button class="btn" id="mCopy" type="button">Copy password</button>
+        <button class="btn primary" id="mClose" type="button">Done</button>
+      </div>`);
+    $("mClose").onclick = closeModal;
+    $("mCopy").onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(x.password);
+        toast("Password copied");
+      } catch (e) {
+        toast("Could not copy. Please copy manually.");
+      }
+    };
+    const img = $("qrImg"),
+      msg = $("qrMsg");
+    try {
+      await loadScript(QR_GEN_SRC);
+      qrcode.stringToBytes = (str) => Array.from(new TextEncoder().encode(str));
+      const qr = qrcode(0, "M");
+      qr.addData(wifiPayload(x.ssid, x.password));
+      qr.make();
+      img.src = qr.createDataURL(6, 2);
+      img.classList.remove("hidden");
+      msg.remove();
+    } catch (e) {
+      msg.textContent = "Could not create the QR code (check your internet).";
+    }
+  }
+
+  /* ---------- scan a Wi-Fi QR code to fill the add form ---------- */
+  const JSQR_SRC = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+  let scanStream = null,
+    scanTimer = 0,
+    scanning = false,
+    lastBad = "";
+  function stopScanner() {
+    scanning = false;
+    clearTimeout(scanTimer);
+    scanTimer = 0;
+    if (scanStream) {
+      scanStream.getTracks().forEach((t) => t.stop());
+      scanStream = null;
+    }
+  }
+  function handleScanned(text, status) {
+    const w = parseWifiQR(text);
+    if (!w) {
+      if (status && lastBad !== text) {
+        lastBad = text;
+        status.textContent = "This is not a Wi-Fi QR code. Try another one…";
+      }
+      return false;
+    }
+    $("ssid").value = w.ssid.slice(0, 60);
+    $("pass").value = w.password.slice(0, 80);
+    closeModal();
+    toast(
+      w.password
+        ? "QR scanned: name and password filled in"
+        : "QR scanned: name filled in. This QR has no password.",
+    );
+    $("place").focus();
+    return true;
+  }
+  async function scanFile(file, status) {
+    status.textContent = "Reading image…";
+    lastBad = "";
+    try {
+      await loadScript(JSQR_SRC);
+      const url = URL.createObjectURL(file);
+      const img = await new Promise((res, rej) => {
+        const im = new Image();
+        im.onload = () => res(im);
+        im.onerror = rej;
+        im.src = url;
+      });
+      URL.revokeObjectURL(url);
+      const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(img.width * k);
+      cv.height = Math.round(img.height * k);
+      const cx = cv.getContext("2d");
+      cx.drawImage(img, 0, 0, cv.width, cv.height);
+      const d = cx.getImageData(0, 0, cv.width, cv.height);
+      const code = jsQR(d.data, d.width, d.height, {
+        inversionAttempts: "attemptBoth",
+      });
+      if (!code || !code.data) {
+        status.textContent = "No QR code found in this image.";
+        return;
+      }
+      handleScanned(code.data, status);
+    } catch (e) {
+      status.textContent = "Could not read this image.";
+    }
+  }
+  async function openScanner() {
+    lastBad = "";
+    openModal(
+      `
+      <h2>Scan Wi-Fi QR code</h2>
+      <p class="sub">Point the camera at the Wi-Fi QR code. The name and password will be filled in automatically.</p>
+      <div class="qr-video"><video id="qrVideo" playsinline muted></video><div class="qr-frame"></div></div>
+      <p id="qrStatus" class="muted">Starting camera…</p>
+      <div class="actions">
+        <button class="btn" id="qrUpload" type="button">Upload QR image</button>
+        <button class="btn" id="qrCancel" type="button">Cancel</button>
+      </div>
+      <input id="qrFile" type="file" accept="image/*" class="hidden">`,
+      stopScanner,
+    );
+    const status = $("qrStatus"),
+      video = $("qrVideo");
+    $("qrCancel").onclick = closeModal;
+    $("qrUpload").onclick = () => $("qrFile").click();
+    $("qrFile").onchange = async (e) => {
+      const f = e.target.files[0];
+      if (f) await scanFile(f, status);
+      e.target.value = "";
+    };
+    try {
+      await loadScript(JSQR_SRC);
+    } catch (e) {
+      status.textContent = "Could not load the QR scanner (check your internet).";
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status.textContent =
+        "Camera is not available here (HTTPS is required). You can upload a QR image instead.";
+      return;
+    }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+    } catch (e) {
+      status.textContent =
+        "Camera permission denied or unavailable. You can upload a QR image instead.";
+      return;
+    }
+    if (!video.isConnected) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
+    scanStream = stream;
+    video.srcObject = stream;
+    try {
+      await video.play();
+    } catch (e) {}
+    status.textContent = "Looking for a QR code…";
+    scanning = true;
+    const cv = document.createElement("canvas"),
+      cx = cv.getContext("2d", { willReadFrequently: true });
+    const tick = () => {
+      if (!scanning) return;
+      if (video.readyState >= 2 && video.videoWidth) {
+        const k = Math.min(1, 640 / video.videoWidth);
+        cv.width = Math.round(video.videoWidth * k);
+        cv.height = Math.round(video.videoHeight * k);
+        cx.drawImage(video, 0, 0, cv.width, cv.height);
+        const d = cx.getImageData(0, 0, cv.width, cv.height);
+        const code = jsQR(d.data, d.width, d.height, {
+          inversionAttempts: "dontInvert",
+        });
+        if (code && code.data && handleScanned(code.data, status)) return;
+      }
+      scanTimer = setTimeout(tick, 120);
+    };
+    tick();
+  }
+  $("qrScanBtn").onclick = openScanner;
 
   /* ---------- add form ---------- */
 

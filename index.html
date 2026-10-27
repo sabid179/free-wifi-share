@@ -85,6 +85,8 @@
 
         <div class="card">
           <h2>2. WiFi details</h2>
+          <button id="qrScanBtn" class="btn block" type="button">Scan Wi-Fi QR code</button>
+          <p class="hint">ওয়াইফাইয়ের QR কোড স্ক্যান করলে নাম ও পাসওয়ার্ড নিজে থেকেই পূরণ হবে।</p>
           <form id="addForm" autocomplete="off">
             <label>WiFi name (SSID)<input id="ssid" required maxlength="60"></label>
             <label>Password<input id="pass" required maxlength="80"></label>
@@ -109,6 +111,10 @@
   <footer class="credit">
     Built by <b>Md. Rakibul Islam Sabid</b> <span class="sep">•</span> Idea by <b>Muhammad Sabbir Hossain</b>
   </footer>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div id="modalCard" class="modal-card"></div>
+  </div>
 
   <div id="toast" class="toast"></div>
 
